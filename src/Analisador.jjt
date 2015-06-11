@@ -1,0 +1,158 @@
+
+options {
+  JDK_VERSION = "1.5";
+  STATIC = false;
+ // DEBUG_PARSER = true;  //habilite para  acompanhar a analise
+}
+
+PARSER_BEGIN(Analisador) 
+public class Analisador {
+ 	public static void main(String args[]) throws ParseException {
+  }
+}
+PARSER_END(Analisador)
+
+<WithinComment> SKIP :
+{
+  "*/" : DEFAULT
+}
+
+<WithinComment> MORE :
+{
+  <~[]>
+}
+
+SKIP :
+{ 	" "
+|	"\r"
+|	"\t"
+|	"\n"
+|    "/*" : WithinComment
+|   < SINGLE_LINE_COMMENT: "//" (~["\n","\r"])* ("\n"|"\r"|"\r\n") >
+|   < EOF_COMMENT: "//" (~["\n","\r"])* >
+}
+
+TOKEN : /* Operadores */
+{	< MAIS: "+" >
+|	< MENOS: "-" >
+|	< ASTERISCO: "*" >
+| 	< AND: "&&" >
+| 	< MENOR: "<" >
+| 	< NAO: "!" >
+}
+
+TOKEN : /* SEPARAORS */
+{	< APARENTESES: "(" >
+|	< FPARENTESES: ")" >
+|	< ACOCHETE: "[" >
+|	< FCOCHETE: "]" >
+| 	< ACHAVE: "{" >
+| 	< FCHAVE: "}" >
+| 	< PONTOVIRGULA: ";" >
+| 	< PONTO: "." >
+| 	< VIRGULA: "," >
+}
+
+TOKEN : /* OBJECTS */
+{	< CLASS: "class" >
+| 	< STRING: "String" >
+| 	< INT: "int" >
+| 	< BOOLEAN: "boolean" >
+| 	< THIS: "this" >
+}
+
+TOKEN : /* CONDITION */
+{	< IF: "if" >
+| 	< ELSE: "else" >
+| 	< WHILE: "while" >
+| 	< TRUE: "true" >
+| 	< FALSE: "false" >
+| 	< STATIC: "static" >
+}
+
+TOKEN : /* */
+{	< EXTENDS: "extends" >
+| 	< RETURN: "return" >
+| 	< PUBLIC: "public" >
+| 	< VOID: "void" >
+| 	< MAIN: "main" >
+| 	< IGUAL: "=" >
+}
+
+TOKEN : /* METHODS */
+{	< PRINT: "System.out.println" >
+| 	< LENGTH: "length" >
+| 	< NEW: "new" >
+}
+
+TOKEN :
+{   < INTLIT: ( <NUMERO> )+ >
+|	< IDENTIFIER: <LETRAS> ( <LETRAS> | <NUMERO> )*>
+| 	< #LETRAS: ["a" - "z", "A"-"Z", "_"] >
+|   < #NUMERO: ["0" - "9"] >
+}
+
+
+/** Producao inicial. */
+void Start() : {}
+{
+  Goal()
+  { return jjtThis; }
+}
+
+void Goal() : {}
+{
+  MainClass()(ClassDeclaration())*// ";"//<EOF>
+}
+
+void MainClass() : {}
+{  <CLASS> <IDENTIFIER> <ACHAVE> <PUBLIC> <STATIC> <VOID> <MAIN> <APARENTESES> <STRING> <ACOCHETE> <FCOCHETE> <IDENTIFIER> <FPARENTESES> <ACHAVE> Statement() <FCHAVE> <FCHAVE> 
+}
+
+void ClassDeclaration() : {}
+{
+  <CLASS> <IDENTIFIER> (<EXTENDS> <IDENTIFIER>)? <ACHAVE> (VarDeclaration())* (MethodDeclaration())* <FCHAVE>}
+void VarDeclaration() : {}
+{
+  Type() <IDENTIFIER> <PONTOVIRGULA>}void MethodDeclaration() : {}{
+  <PUBLIC> Type() <IDENTIFIER> <APARENTESES> ( Type() <IDENTIFIER> ( <VIRGULA> Type() <IDENTIFIER>)*)? <FPARENTESES> <ACHAVE> (VarDeclaration())* (Statement())* <RETURN> Expression() <PONTOVIRGULA>}
+void Type() : {}{  <INT> (<ACOCHETE> <FCOCHETE> |{}) 
+  | <BOOLEAN>
+  | <IDENTIFIER> 
+}
+void Statement() : {}{  <ACHAVE> (Statement())* <FCHAVE>
+  | <IF> <APARENTESES> Expression() <FPARENTESES> Statement() <ELSE> Statement()
+  | <WHILE> <APARENTESES> Expression() <FPARENTESES> Statement()
+  | <PRINT> <APARENTESES> Expression() <FPARENTESES> <PONTOVIRGULA>
+  | <IDENTIFIER> (<IGUAL> Expression() <PONTOVIRGULA>
+  |  <ACOCHETE> Expression() <FCOCHETE> <IGUAL> Expression() <PONTOVIRGULA>)
+}
+void Elinha() : {}{   (<AND> | <MENOR> | <MAIS> | <MENOS> | <ASTERISCO>) Expression()
+   | <ACOCHETE> Expression() <FCOCHETE>
+   | <PONTO> (<LENGTH>
+   |  <IDENTIFIER> <APARENTESES> ( Expression() ( <VIRGULA> Expression())*)? <FPARENTESES> )
+   | {}
+}void Expression() : {}
+{
+  
+ // Elinha() (<AND> | <MENOR> | <MAIS> | <MENOS> | <ASTERISCO>) Expression()
+ /* //| Expression() <ACOCHETE> Expression() <FCOCHETE>
+  //| Expression() <PONTO> <LENGTH>
+  //| Expression() <PONTO> <IDENTIFIER> <APARENTESES> ( Expression() ( <VIRGULA> Expression())*)? <FPARENTESES>*/
+   <INTLIT> Elinha()
+  | <TRUE> Elinha()
+  | <FALSE> Elinha()
+  | <IDENTIFIER> Elinha()
+  | <THIS> Elinha()
+  | <NEW>
+	  (
+		<INT> <ACOCHETE> Expression() <FCOCHETE> Elinha()
+	  	|<IDENTIFIER> <APARENTESES> <FPARENTESES> Elinha()	  )
+  | <NAO> Expression() Elinha()
+  | <APARENTESES> Expression() <FPARENTESES> Elinha()}
+
+  
+  
+  
+  
+          
